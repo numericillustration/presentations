@@ -10,33 +10,68 @@ script!
 
 ## prep
 
-### Get a Linux VM to play on
+1. Get a Linux VM to play on if desired
 
-- Vagrant:
-  - go to `https://www.vagrantup.com` and download
-  - install Virtualbox or the (VMWare Fusion plugin)
-  - run a VM
+    For total safety, you can do anything to a VM and even if you accidentally destroy it, no big deal.  Make another one.
+
+    - Vagrant:
+    If you have an Intel Mac this will work.  "Apple Silicon" users this fails
+    - go to `https://www.vagrantup.com` and download
+    - install Virtualbox or the (VMWare Fusion plugin)
+    - run a VM
+
+        ```bash
+        vagrant init hashicorp/bionic64
+        vagrant up
+        vagrant ssh
+        ```
+
+        NOTE: Apple silicon users be advised, you need to use arm images and will
+        need a release of VirtualBox or VMWare Fusion for arm (Appe silicon is an
+        ARM platform)
+
+    - Triton (RIP)
+
+        ```bash
+        triton -p iad001 instance create --wait --name=my_sandbox  centos-7  g4-highcpu-4G
+        triton -p iad001 instance ssh my_sandbox
+        ```
+
+    - Fusion if you must
+    - UTM
+    - get [the free download][31]
+    - follow [the Debian UTM guide][https://docs.getutm.app/guides/debian/]
+2. ssh into whatever host you setup
 
     ```bash
-    vagrant init hashicorp/bionic64
-    vagrant up
-    vagrant ssh
+    2024.09.25.13:29:23 ~/gits/presentations 🂁 ssh -o PreferredAuthentications=keyboard-interactive,password -o PasswordAuthentication=yes 192.168.64.4
+    The authenticity of host '192.168.64.4 (192.168.64.4)' can't be established.
+    ED25519 key fingerprint is SHA256:39fAgENKVOwu/kWBAEixQFDAtGWYva3I94tHHu+44UA.
+    This key is not known by any other names.
+    Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+    Warning: Permanently added '192.168.64.4' (ED25519) to the list of known hosts.
+    mhicks@192.168.64.4's password:
+    Linux clitutorial 6.1.0-25-arm64 #1 SMP Debian 6.1.106-3 (2024-08-26) aarch64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    Last login: Wed Sep 25 16:28:18 2024
+    mhicks@clitutorial:~$
     ```
+3. Make a play directory
 
-    NOTE: Apple silicon users be advised, you need to use arm images and will
-    need a release of VirtualBox or VMWare Fusion for arm (Appe silicon is an
-    ARM platform)
-
-- Triton
-
-    ```bash
-    triton -p iad001 instance create --wait --name=my_sandbox  centos-7  g4-highcpu-4G
-    triton -p iad001 instance ssh my_sandbox
-    ```
+   ```bash
+   mkdir cli_tutorial
+   cd cli_tutorial
+   ```
 
 ## BASICS
 
-1. io redirection
+1. [io redirection][1]
 
     Files, file descriptors and IO redirection:
 
@@ -87,7 +122,7 @@ script!
         Useful when you want to be able to get all output as stdout to grep it.
 
         ```bash
-        command 2>&1 
+        command 2>&1
         ```
 
     4. append stdout of a command to a file
@@ -159,7 +194,38 @@ script!
         sudo command | sudo tee filename 1>/dev/null
         ```
 
-2. Composability and the unix philosophy
+2. style and readability
+
+    ```bash
+    echo "Captain: What happen ? Mechanic: Somebody set up us the bomb. (spoken in the Flash animation as Someone set up us the bomb) Operator: We get signal. Captain: What ! Operator: Main screen turn on. Captain: It's you !! CATS: How are you gentlemen !! CATS: All your base are belong to us. CATS: You are on the way to destruction. Captain: What you say !! CATS: You have no chance to survive make your time. CATS: Ha Ha Ha Ha ...." | sort | uniq | wc -l | xargs |.....
+    ```
+
+    Bash allows one to escape the newline character in strings.  So this looooooong line can
+    be rewritten neatly on multiple lines to make it much more readable and maintainable.
+
+    ```bash
+    echo "Captain: What happen ?\
+          Mechanic: Somebody set up us the bomb. (spoken in the Flash animation as Someone set up us the bomb)\
+          Operator: We get signal.\
+          Captain: What !\
+          Operator: Main screen turn on.\
+          Captain: It's you !!\
+          CATS: How are you gentlemen !!\
+          CATS: All your base are belong to us.\
+          CATS: You are on the way to destruction.\
+          Captain: What you say !!\
+          CATS: You have no chance to survive make your time.\
+          CATS: Ha Ha Ha Ha ...."\
+            | sort \
+            | uniq \
+            | wc -l \
+            | xargs \
+            |.....
+    ```
+
+    see also [Zero Wing][33]
+
+3. Composability and the unix philosophy
 
     Each thing should do one job well and these components can be combined
     together to do complicated tasks by piping the output of one command to
@@ -179,7 +245,7 @@ script!
                | op signin --account tritonproduct
     ```
 
-3. [Variables][2] - keeping things to use again - simple assignment
+4. [Variables][2] - keeping things to use again - simple assignment
 
     ```bash
     foo='stuff'
@@ -187,7 +253,7 @@ script!
     foo="stuff with variables with .surrounding_${stuff}smashed into it"
     ```
 
-4. HISTORY
+5. HISTORY
 
     "I know I did this before..."
     - the Bash manual has some [info on settings][24] and [heres what I use][9]
@@ -201,7 +267,7 @@ script!
         history | grep foo
         ```
 
-5. bash [keybinding/shortcuts][4]
+6. bash [keybinding/shortcuts][4]
 
     native is `emacs`, the most important ones to me are:
 
@@ -242,7 +308,7 @@ script!
     (($(zoneadm list -vc | grep -v global | wc -l))) && echo "Rebooting" && shutdown -y -g0 -i6 || echo "Reboot refused - CN has instances."
     ```
 
-3. WAT is my script doing??  What is this other script doing? aka tracing
+3. WAT is my script doing??  What is this other script doing? aka [tracing][30]
 
     If you're stuck iand don't want to or can't add 1000 echo/printf lines
 
@@ -286,7 +352,7 @@ script!
 
         ```bash
         if ((FIRST == 0))
-        then 
+        then
             printf "\n%b" "    { \"uuid\": \"$uuid\", \"state\": \"${zones[$uuid]%%λλλ*}\", \"zone_state\": \"${zones[$uuid]##*λλλ}\" }"
             let "FIRST += 1"
         else
@@ -305,7 +371,7 @@ script!
                         "$component" \
                         "$this_shard" \
                         "$component_image_to" \
-                        "$((instance_count + already_existing_image_to_instance_count))" 
+                        "$((instance_count + already_existing_image_to_instance_count))"
         ```
 
     2. [tabular output][27]
@@ -333,7 +399,7 @@ script!
 
 1. Running chunks of code: subshells, blocks, and functions
 
-    Often in shell scripts one runs external commands.  But when you _just_
+    Often in shell scripts one runs external commands.  But when you *just*
     want to run some shell commands without writing them out to a file, and
     executing that, you can subshell.
 
@@ -343,104 +409,110 @@ script!
     - encapsulation
     - capturing output AND exit codes
 
-    Functions:
+    1. Functions:
 
-    ```bash
-    if (( DEBUG ))
-    then
-        printf 'DEBUG - blah\n'
-    fi
-    ```
+        ```bash
+        if (( DEBUG ))
+        then
+            printf 'DEBUG - blah\n'
+        fi
+        ```
 
-    You may want to refactor into
+        You may want to refactor into
 
-    ```bash
-    function log () {
-        (( DEBUG )) && printf 'DEBUG - %s\n' "$1" >&2 
-    }
+        ```bash
+        function log () {
+            (( DEBUG )) && printf 'DEBUG - %s\n' "$1" >&2
+        }
 
-    # later in the code
-    log "blah blah blah"
-    ```
+        # later in the code
+        log "blah blah blah"
+        ```
 
-    Subshells:
+    2. Subshells:
 
-    ```bash
-    🂁 my_rand="$(( RANDOM % 100 ))"; printf 'me is %s parent is %s rand is %s\n' "$BASHPID" "$$" "$my_rand"
-    me is 12915 parent is 12915 rand is 11262
-    # note ^- pid is same -^
+        ```bash
+        🂁 my_rand="$(( RANDOM % 100 ))"; printf 'me is %s parent is %s rand is %s\n' "$BASHPID" "$$" "$my_rand"
+        me is 12915 parent is 12915 rand is 11262
+        # note ^- pid is same -^
 
-    🂁 ( my_rand="$(( RANDOM % 100 ))"; printf 'me is %s parent is %s rand is %s\n' "$BASHPID" "$$" "$my_rand")
-    me is 13020 parent is 12915 rand is 7849
-    # note ^- pid different -^
-    ```
+        🂁 ( my_rand="$(( RANDOM % 100 ))"; printf 'me is %s parent is %s rand is %s\n' "$BASHPID" "$$" "$my_rand")
+        me is 13020 parent is 12915 rand is 7849
+        # note ^- pid different -^
+        ```
 
-    ```bash
-    🂁 myrand="$(( RANDOM % 100 ))"
-    🂁 echo $myrand
-    56
-    🂁 ( (( myrand++ )) ; echo $myrand )
-    57
-    🂁 echo $myrand
-    56
-    🂁 ( for i in {1..4}} ; do (( myrand++ )) ; echo $myrand ; done )
-    57
-    58
-    59
-    60
-    🂁 echo $myrand
-    56
-    ```
+        ```bash
+        🂁 myrand="$(( RANDOM % 100 ))"
+        🂁 echo $myrand
+        56
+        🂁 ( (( myrand++ )) ; echo $myrand )
+        57
+        🂁 echo $myrand
+        56
+        🂁 ( for i in {1..4}} ; do (( myrand++ )) ; echo $myrand ; done )
+        57
+        58
+        59
+        60
+        🂁 echo $myrand
+        56
+        ```
 
-    Capturing output from subshells.
-    NOTE -The older bactic style is not as clear
+    3. Capturing output from subshells
 
-    ```bash
-   `foo`
-    ```
+        NOTE -The older back-tic style is not as clear that its string output
 
-    use
+        ```bash
+        `foo`
+        ```
 
-    ```bash
-    $(foo)
-    ```
+        as the newer stype
 
-    Its more clear that you are doing variable-esque expansion of the output.
+        ```bash
+        $(foo)
+        ```
 
-    with a subshell, if you want the output and [optionally the return code][7] you
-    can get both.
+        Where its obvious you are doing bash variable-esque (all variables are strings) expansion of the output.
 
-    ```bash
-    diff file1 file2
-    ```
+    4. capturing output and the exit code
 
-    will tell you the diff, or output nothing.  Did it succeed?
+        With a subshell, if you want the output and [optionally the return code][7] you
+        can get both.
 
-    ```bash
-    diff_output="$(diff file1 file2)"
-    ret="$?"
-    if (( ret ))
-    then 
-        printf 'Files differ\n%s\n' "$diff_output"
-    else
-        printf 'files identical\n'
-    fi
-    ```
+        ```bash
+        diff file1 file2
+        ```
 
-    also can use brace notation for nonsubshell encapsulation
+        will tell you the diff, or output nothing.  Did it succeed?
 
-    ```bash
-    🂁 myrand="$(( RANDOM % 100 ))"
-    🂁 echo $myrand
-    56
-    🂁 { for i in {1..4}} ; do (( myrand++ )) ; echo $myrand ; done }
-    57
-    58
-    59
-    60
+        ```bash
+        diff_output="$(diff file1 file2)"
+        ret="$?"
+        if (( ret ))
+        then
+            printf 'Files differ\n%s\n' "$diff_output"
+        else
+            printf 'files identical\n'
+        fi
+        ```
 
-    # what do you think will output now if we echo myrand ?
-    ```
+    5. saving the extra overhead of a full subshell exec
+
+        You can also use brace notation for nonsubshell encapsulation
+
+        ```bash
+        🂁 myrand="$(( RANDOM % 100 ))"
+        🂁 echo $myrand
+        56
+        🂁 { for i in {1..4}} ; do (( myrand++ )) ; echo $myrand ; done }
+        57
+        58
+        59
+        60
+
+        ```
+
+        What do you think will output now if we echo myrand ?  See the later section on scope.
 
 2. pasting blocks of commands
 
@@ -458,7 +530,36 @@ script!
     }
     ```
 
-3. Advanced IO redirection
+3. [read][35] for parsing standardized lines
+
+    When you have a known format for some lines you want to parse, often an easy way
+    to handle that output is to read into multiple variables all at once
+
+    ```bash
+    myline='foo bar baz buz'
+    ```
+
+    instead of trying to use regex, awk, or cut to parse it you can use read:
+
+    ```bash
+    read var1 var2 var3 var4 <<<"$myline"
+    ```
+
+    [example][15]:
+
+    or with different delimiters
+
+    ```bash
+    myline2='foo,bar,baz,buz'
+    {
+    IFS=,
+    read var1 var2 var3 var4 <<<"$myline2"
+    }
+    ```
+
+    [bash IFS docs][36]
+
+4. Advanced IO redirection
 
     1. subshells as a file handle
 
@@ -466,19 +567,19 @@ script!
         <( foo ) for reading output as a filehandle
         ```
 
-        [some][11]
+        [diffing some pretty formatted json from 2 unpretty files][11]
 
         ```bash
         diff -u <(json -f "$cm-pre-$component-$date.json") <(json -f "$cm-post-$component-$date.json")
         ```
 
-        going crazy
+        diffing local file vs remote file ( via "output of a command on another host via ssh" as a file )
 
         ```bash
         diff -u /etc/ssh/sshd_config <(ssh admin.headnode.iad001.joyent.us 'cat /etc/ssh/sshd_config')
         ```
 
-        from [this zookeeper tooling][12]
+        Read lines of output from a command as a file without saving it anywhere -- from [this zookeeper tooling][12]
 
         ```bash
         while read line
@@ -487,7 +588,7 @@ script!
         done < <(echo mntr | nc -w5 ${ZK_IP} 2181)
         ```
 
-    2. Redirecting contents of a variable to stdin
+    2. Redirecting contents of a variable to stdin ( an avoiding useless use of cat technique )
 
         This is done with the `<<<` operator
 
@@ -498,7 +599,7 @@ script!
         vm_brand=$($JSON -Ha brand <<< "$VMINFO" )
         ```
 
-4. [arrays][5]
+5. [arrays][5]
 
     A Single name with multiple indices to reference contents
 
@@ -556,7 +657,7 @@ script!
         ```bash
         start=2
         end=5
-        echo "${my_array[@]:$start:$end}" 
+        echo "${my_array[@]:$start:$end}"
         ```
 
     3. get a count of used indices
@@ -600,7 +701,7 @@ script!
 
         from [torwatch][14]
 
-5. [Heredocs][8] - when you have a lot to output and echo just isn't cutting it
+6. [Heredocs][8] - when you have a lot to output and echo just isn't cutting it
 
     See  ops-cnsetup script for [heredoc with variable expansion][28]
 
@@ -611,24 +712,9 @@ script!
     ```
 
     ```bash
-    cat >somefile <<'EOF'
+    cat > somefile <<'EOF'
     echo "${myvariable}"
     EOF
-    ```
-
-6. readline
-
-    Often an easier way to handle things to [read into multiple
-    variables at once][15]:
-
-    ```bash
-    while [[ $index -lt ${#FOO[@]} ]]
-    do
-        read uuid state zone_state <<<"${FOO[$index]}"
-        # substring separator of λλλ since bash only does single dimension arrays
-        zones["$uuid"]="${state}λλλ${zone_state}"
-        let "index += 1"
-    done
     ```
 
 7. scope of variables
@@ -638,42 +724,80 @@ script!
     ```bash
     this_instance='foo'
     printf 'global this_instance is: %s\n' "$this_instance"
-    function fooinate() { 
+    function fooinate() {
         local this_instance="$1"
         printf 'inside fooinate, local this_instance starts as: %s\n' "$this_instance"
-        this_instance="$this_instance blah blah blah" 
+        this_instance="$this_instance blah blah blah"
         printf 'inside fooinate, but now local this_instance modified to: %s\n' "$this_instance"
     }
-    
+
     fooinate "$this_instance"
     printf 'global this_instance is: %s\n' "$this_instance"
     ```
 
-8. Stay in BASH
+8. Efficiency of staying in BASH
 
-    1. do a regex string match in your script instead of piping to grep
+    While composability with other tools is great, often there are bash builtins
+    for many of the things one wants to do and there are some savings on overhead
+    (runtime, memory, file descriptor use...) which can be gained by NOT shelling
+    out to other utilities.
 
-        Operator is `=~`
-
-        this example is from [here][16]
+    1. regex string match right in your script instead of piping to grep
 
         ```bash
+        if echo "$NODE" | grep -E '[R][ABC][A-Z0-9]{4,6}' ;then
+           USERNAME="ADMIN"
+        elif echo "$NODE" | grep -E '[MS|RM][A-Z0-9]{4,6}' ;then
+           USERNAME="ADMIN"
+        elif echo "$NODE" | grep -E '^[A-Z0-9]{7}$' ; then
+           USERNAME="root"
+        fi
+        ```
+
+        The bash regex match operator is `=~`
+
+        ```bash
+        RICH_REGEX='[R][ABC][A-Z0-9]{4,6}'
+        MANTA_REGEX='[MS|RM][A-Z0-9]{4,6}'
+        DELL510_REGEX='^[A-Z0-9]{7}$'
+
         if [[ $NODE =~ $RICH_REGEX ]];then
            USERNAME="ADMIN"
         elif [[ $NODE =~ $MANTA_REGEX ]];then
            USERNAME="ADMIN"
         elif [[ $NODE =~ $DELL510_REGEX ]]; then
            USERNAME="root"
-        elif [[ $NODE =~ $PR_REGEX ]]; then
-           USERNAME="root"
-        elif [[ $NODE =~ $HB_REGEX ]]; then
-           USERNAME="ADMIN"
-        elif [[ $NODE =~ $HAC_DELLREGEX ]]; then
-           USERNAME="root"
-        elif [[ $NODE =~ $HAC_SMCIREGEX ]]; then
-           USERNAME="ADMIN"
-        elif [[ $NODE =~ $JAC_REGEX ]]; then
-           USERNAME="ADMIN"
+        fi
+        ```
+
+        this example is from [here][16]
+
+    2. case changes
+
+        There are a large number of ways you can shell out to do this:
+
+        *tr* example
+
+        ```bash
+        username="$(echo "$username" | tr '[:lower:]')"
+        ```
+
+        *perl*
+
+        ```bash
+        username="$(echo "$username" |  perl -ne 'print lc')"
+        ```
+
+        But you can also do it right in bash >= 4.0
+
+        ```bash
+        username="${username,,}"
+        ```
+
+        or to *upper* case:
+
+        ```bash
+        username="${username^^}"
         ```
 
 9. background processing
@@ -693,7 +817,7 @@ script!
 
     from `/opt/custom/telegraf/bin/120s/manatee-adm.sh`
 
-## habits
+## Habits
 
 1. scratchpad
 
@@ -703,7 +827,7 @@ script!
     with minor alteration or even converted them into [common tooling][21]
     I can [share with the team][22] or that [lands in docs][23].
 
-2. put all the commands used to get useful info in the tickets.
+2. put all the commands used to get useful info *in the JIRA ticket* not just the output.
 
 ## profile things
 
@@ -726,13 +850,13 @@ script!
     countdown() {
         local seconds="$1"
         local outro="$2"
-    
+
         if [[ -z $outro ]]
         then
             outro='done'
         fi
         while (( seconds > 0 ))
-        do 
+        do
             printf '\r%s%s ' "$(tput el)" "$((seconds--))"
             sleep 1
         done
@@ -740,11 +864,12 @@ script!
     }
     ```
 
-    [print out log entries only when in debug mode][18]
+    - [print out log entries only when in debug mode][18]
+    - [a collection of these][34]
 
 3. CDPATH
 
-    save keystrokes on typing the full path to dirs you visit regularly
+    A way to save some keystrokes on typing the full path to dirs you visit regularly
 
     ```bash
     # probe all these paths for existence and add to CDPATH
@@ -789,7 +914,7 @@ favorites:
     #           %r    The remote username.
     #           %T    The local tun(4) or tap(4) network interface assigned if tunnel forwarding was requested, or "NONE" otherwise.
     #           %u    The local username.
-    
+
     ControlPersist 720
     ```
 
@@ -840,39 +965,18 @@ favorites:
 
 1. re-calling utilities for info you already have
 
-   read the output once into a variable and then repeatedly pipe
+   Read the output once into a variable and then repeatedly pipe
    through parsers such as json, grep, awk... for the parts you want to capture.
 
-2. Tritonisms
+   ```bash
+   smart_output="$(smartctl -a /dev/sda)"
 
-    - sdc-waitforjob
 
-      Any API call that tosses out a workflow job uuid can be piped to this
-      and it will follow the job status, outputting updates until its complete.
+    unsup_match="$(grep -E 'SMART support is:.*Unavailable - device lacks SMART capability.|SMART support is:.*Disabled' <<< "$smart_output")"
 
-    - `sdc-server lookup` getting curated CN lists for `sdc-oneachnode`
+    disk_serial="$(awk '($1~/Serial/){print $3}' <<< "$smart_output")"
 
-        ```bash
-        sdc-oneachnode -T 500 -n $(sdc-server lookup -c 'traits.internal!~"Manta"' 'traits.internal!~PKGSRC' 'traits.triton!=headnode' 'hostname!=headnode') '/var/tmp/strap.sh ams1-cn.json'
-        ```
-
-    - vmadm search vs vmadm list
-    - `svcs -L <servicename>`
-
-        ```bash
-        $(svcs -L foo)
-        less +G $(svcs -L foo)  # or +f
-        ```
-
-    - bunyan
-
-        ```bash
-        bunyan -l error $(svcs -L foo)
-        ```
-
-    - sdc-login
-
-      This utility can help you login to HA services on secondary headnodes.
+   ```
 
 [1]: https://tldp.org/LDP/abs/html/io-redirection.html
 [2]: https://tldp.org/LDP/abs/html/variables.html
@@ -903,4 +1007,10 @@ favorites:
 [27]: https://github.com/joyent/opstools/blob/master/src/bin/triton-user-keytrace#L107
 [28]: https://github.com/joyent/opstools/blob/master/src/bin/ops-cnsetup#L1158-L1177
 [29]: https://tldp.org/LDP/abs/html/loops1.html
-[30]: https://tldp.org/LDP/abs/html/io-redirection.html
+[30]: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#The-Set-Builtin
+[31]: https://mac.getutm.app
+[32]: https://ubuntu.com/download/server/arm
+[33]: https://en.wikipedia.org/wiki/Zero_Wing
+[34]: https://github.com/joyent/devops-tools/pull/3/files
+[35]: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#index-read
+[36]: https://www.gnu.org/savannah-checkouts/gnu/bash/manual/bash.html#index-IFS
